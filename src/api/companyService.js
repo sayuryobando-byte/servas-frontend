@@ -10,7 +10,7 @@ const ALLOWED_LOGO_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MAX_LOGO_SIZE_MB = 2;
 
 export function validateLogoFile(file) {
-  if (!file) return null;
+  if (!file) return null; // el logo es opcional
   if (!ALLOWED_LOGO_TYPES.includes(file.type)) {
     return "Formato no permitido. Usa PNG, JPG o WEBP.";
   }
@@ -22,48 +22,19 @@ export function validateLogoFile(file) {
 
 function buildCompanyFormData(company) {
   const formData = new FormData();
-  
-  // Garantizar valores no nulos para cadenas de texto
-  formData.append("nit", company.nit || "");
-  formData.append("name", company.name || "");
-  formData.append("address", company.address || "");
-  
-  if (company.description) {
-    formData.append("description", company.description);
-  }
-  if (company.social_media) {
-    formData.append("social_media", company.social_media);
-  }
-  if (company.phone) {
-    formData.append("phone", company.phone);
-  }
-  if (company.logo instanceof File) {
-    formData.append("logo", company.logo);
-  }
-  
+  formData.append("nit", company.nit);
+  formData.append("name", company.name);
+  if (company.description) formData.append("description", company.description);
+  formData.append("address", company.address);
+  if (company.social_media) formData.append("social_media", company.social_media);
+  if (company.logo instanceof File) formData.append("logo", company.logo);
   return formData;
-}
-
-/**
- * HU-003 · Obtener empresa asociada al usuario autenticado
- * GET /companies/me
- */
-export async function getMyCompany() {
-  if (USE_MOCKS) {
-    await wait();
-    return {
-      status: 200,
-      data: { id: "company-mock-1", name: "Empresa Mock" },
-    };
-  }
-
-  const { data } = await httpClient.get("/companies/me");
-  return { status: 200, data };
 }
 
 /**
  * HU-003 · Registrar negocio
  * POST /companies (multipart/form-data)
+ * requiere: nit, name, address. opcionales: description, social_media, logo
  */
 export async function createCompany(company) {
   const logoError = validateLogoFile(company.logo);
@@ -81,11 +52,10 @@ export async function createCompany(company) {
   }
 
   const formData = buildCompanyFormData(company);
-
-  // Al usar Axios con FormData, no fuerces el Header "Content-Type" a mano,
-  // deja que el navegador establezca el multipart/form-data con el boundary automático.
-  const response = await httpClient.post("/companies", formData);
-  return { status: 201, data: response.data };
+  const { data } = await httpClient.post("/companies", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return { status: 201, data };
 }
 
 /**
@@ -102,6 +72,8 @@ export async function updateCompany(id, company) {
   }
 
   const formData = buildCompanyFormData(company);
-  const response = await httpClient.put(`/companies/${id}`, formData);
-  return { status: 200, data: response.data };
+  const { data } = await httpClient.put(`/companies/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return { status: 200, data };
 }

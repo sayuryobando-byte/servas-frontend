@@ -8,27 +8,6 @@ function wait(ms = 400) {
 }
 
 /**
- * HU-005 · Crear un nuevo servicio
- * POST /services
- */
-export async function createService(serviceData) {
-  if (USE_MOCKS) {
-    await wait(300);
-    const newService = {
-      id: Date.now(),
-      ...serviceData,
-      rating: 5.0,
-      reviewsCount: 0,
-    };
-    mockServices.push(newService);
-    return { status: 201, data: newService };
-  }
-
-  const { data } = await httpClient.post("/services", serviceData);
-  return { status: 201, data };
-}
-
-/**
  * HU-008 · Selección de servicio (catálogo)
  * GET /services?comuna_id=&modality=&company_id=
  */

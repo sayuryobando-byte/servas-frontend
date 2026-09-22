@@ -16,7 +16,7 @@ function wait(ms = 500) {
 /**
  * HU-001 · Registro de proveedor
  * POST /auth/register
- * Payload desde UI: { email, password, document_type, document_number, first_name, last_name, phone, birth_date? }
+ * body: { email, password, document_type, document_number, first_name, last_name, phone, birth_date? }
  */
 export async function registerProvider(payload) {
   if (USE_MOCKS) {
@@ -35,19 +35,7 @@ export async function registerProvider(payload) {
     return { status: 201, data: { message: "Proveedor registrado exitosamente." } };
   }
 
-  // Mapeo explicito de snake_case (Frontend) a camelCase (Backend DTO)
-  const body = {
-    email: payload.email,
-    password: payload.password,
-    firstName: payload.first_name,
-    lastName: payload.last_name,
-    documentType: payload.document_type,
-    documentNumber: payload.document_number,
-    phone: payload.phone,
-    birthDate: payload.birth_date || null,
-  };
-
-  const { data } = await httpClient.post("/auth/register", body);
+  const { data } = await httpClient.post("/auth/register", payload);
   return { status: 201, data };
 }
 
@@ -80,7 +68,7 @@ export async function verifyEmail({ email, otp_code }) {
     return { status: 200, data: { message: "Cuenta verificada exitosamente." } };
   }
 
-  const { data } = await httpClient.post("/auth/verify-email", { email, otpCode: otp_code });
+  const { data } = await httpClient.post("/auth/verify-email", { email, otp_code });
   return { status: 200, data };
 }
 

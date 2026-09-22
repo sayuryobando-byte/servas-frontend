@@ -21,15 +21,11 @@ export default function LoginPage() {
 
     setSubmitting(true);
     try {
-      // Inicia sesión guardando el token
       await login({ email, password });
-
-      // Redirección directa a la página de la empresa
       navigate("/negocio");
     } catch (err) {
-      // HU-004 · Error al iniciar sesión
-      console.error("Error durante el proceso de login:", err);
-      setError(err?.friendlyMessage || err?.message || "Correo o contraseña incorrectos.");
+      // HU-004 · Inicio de sesión fallido
+      setError(err.friendlyMessage || "Correo o contraseña incorrectos.");
     } finally {
       setSubmitting(false);
     }

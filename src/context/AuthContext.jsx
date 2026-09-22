@@ -1,90 +1,72 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { login as loginRequest, logout as logoutRequest } from "../api/authService";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const AuthContext = createContext(null);
+
+const TOKEN_KEY = "servas_token";
+const PROVIDER_KEY = "servas_provider";
+
+export function AuthProvider({ children }) {
+  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
+  const [provider, setProvider] = useState(() => {
+    const raw = localStorage.getItem(PROVIDER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  useEffect(() => {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  }, [token]);
+
+  useEffect(() => {
+    if (provider) localStorage.setItem(PROVIDER_KEY, JSON.stringify(provider));
+    else localStorage.removeItem(PROVIDER_KEY);
+  }, [provider]);
+
+  // HU-004 · Inicio de sesión
+  const login = useCallback(async (credentials) => {
+    setLoading(true);
     setError(null);
-
-    if (!email || !password) {
-      setError("Ingresa tu correo y contraseña.");
-      return;
-    }
-
-    setSubmitting(true);
     try {
-      // Obtenemos los datos devueltos por AuthContext tras el login exitoso
-      const response = await login({ email, password });
-      
-      // Extraemos la información del proveedor guardada en la respuesta
-      const providerData = response?.provider;
-
-      // Verificamos si el proveedor ya tiene una empresa vinculada
-      const hasCompany = Boolean(
-        providerData?.companyId || 
-        providerData?.company_id || 
-        providerData?.company
-      );
-
-      if (!hasCompany) {
-        // Si NO tiene empresa registrada, lo redirigimos a registrar su empresa
-        navigate("/registrar-empresa");
-      } else {
-        // Si YA tiene empresa, lo llevamos a crear/administrar sus servicios
-        navigate("/registrar-servicio");
-      }
+      const { data } = await loginRequest(credentials);
+      setToken(data.token);
+      setProvider(data.provider ?? null);
+      return data;
     } catch (err) {
-      // HU-004 · Inicio de sesión fallido
-      setError(err.friendlyMessage || "Correo o contraseña incorrectos.");
+      setError(err.friendlyMessage || "No se pudo iniciar sesión.");
+      throw err;
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
-  }
+  }, []);
 
-  return (
-    <div className="auth-page">
-      <form className="card auth-card" onSubmit={handleSubmit}>
-        <h1>Portal proveedores</h1>
-        <p className="muted">Inicia sesión para administrar tus servicios y reservas.</p>
+  // HU-005 · Cierre de sesión
+  const logout = useCallback(async () => {
+    try {
+      await logoutRequest();
+    } finally {
+      setToken(null);
+      setProvider(null);
+    }
+  }, []);
 
-        {error && <div className="alert alert--error">{error}</div>}
+  const value = {
+    token,
+    provider,
+    isAuthenticated: Boolean(token),
+    loading,
+    error,
+    login,
+    logout,
+  };
 
-        <label className="field">
-          <span>Correo electrónico</span>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-          />
-        </label>
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
 
-        <label className="field">
-          <span>Contraseña</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-          />
-        </label>
-
-        <button className="btn btn--primary" type="submit" disabled={submitting}>
-          {submitting ? "Ingresando..." : "Iniciar sesión"}
-        </button>
-
-        <p className="muted center">
-          ¿Aún no tienes cuenta? <Link to="/registro">Regístrate</Link>
-        </p>
-      </form>
-    </div>
-  );
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth debe usarse dentro de <AuthProvider>");
+  return ctx;
 }
