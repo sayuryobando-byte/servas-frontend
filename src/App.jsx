@@ -1,41 +1,90 @@
-import { Routes, Route } from "react-router-dom";
-import Header from "./components/Header";
-import ProtectedRoute from "./components/ProtectedRoute";
-import CatalogPage from "./pages/CatalogPage";
-import RegisterPage from "./pages/RegisterPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
-import LoginPage from "./pages/LoginPage";
-import CompanyPage from "./pages/CompanyPage";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-export default function App() {
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError(null);
+
+    if (!email || !password) {
+      setError("Ingresa tu correo y contraseña.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Obtenemos los datos devueltos por AuthContext tras el login exitoso
+      const response = await login({ email, password });
+      
+      // Extraemos la información del proveedor guardada en la respuesta
+      const providerData = response?.provider;
+
+      // Verificamos si el proveedor ya tiene una empresa vinculada
+      const hasCompany = Boolean(
+        providerData?.companyId || 
+        providerData?.company_id || 
+        providerData?.company
+      );
+
+      if (!hasCompany) {
+        // Si NO tiene empresa registrada, lo redirigimos a /negocio
+        navigate("/negocio");
+      } else {
+        // Si YA tiene empresa, lo llevamos a la página principal / catálogo
+        navigate("/");
+      }
+    } catch (err) {
+      // HU-004 · Inicio de sesión fallido
+      setError(err.friendlyMessage || "Correo o contraseña incorrectos.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
-    <div className="app">
-      <Header />
-      <main className="app__main">
-        <Routes>
-          {/* HU-008 / HU-009 · Catálogo y detalle de servicio */}
-          <Route path="/" element={<CatalogPage />} />
+    <div className="auth-page">
+      <form className="card auth-card" onSubmit={handleSubmit}>
+        <h1>Portal proveedores</h1>
+        <p className="muted">Inicia sesión para administrar tus servicios y reservas.</p>
 
-          {/* HU-001 · Registro de proveedor */}
-          <Route path="/registro" element={<RegisterPage />} />
+        {error && <div className="alert alert--error">{error}</div>}
 
-          {/* HU-002 · Verificación del correo electrónico */}
-          <Route path="/verificar-correo" element={<VerifyEmailPage />} />
-
-          {/* HU-004 · Inicio de sesión */}
-          <Route path="/login" element={<LoginPage />} />
-
-          {/* HU-003 · Datos de compañía (requiere sesión) */}
-          <Route
-            path="/negocio"
-            element={
-              <ProtectedRoute>
-                <CompanyPage />
-              </ProtectedRoute>
-            }
+        <label className="field">
+          <span>Correo electrónico</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
           />
-        </Routes>
-      </main>
+        </label>
+
+        <label className="field">
+          <span>Contraseña</span>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+        </label>
+
+        <button className="btn btn--primary" type="submit" disabled={submitting}>
+          {submitting ? "Ingresando..." : "Iniciar sesión"}
+        </button>
+
+        <p className="muted center">
+          ¿Aún no tienes cuenta? <Link to="/registro">Regístrate</Link>
+        </p>
+      </form>
     </div>
   );
 }

@@ -22,12 +22,25 @@ export function validateLogoFile(file) {
 
 function buildCompanyFormData(company) {
   const formData = new FormData();
-  formData.append("nit", company.nit);
-  formData.append("name", company.name);
-  if (company.description) formData.append("description", company.description);
-  formData.append("address", company.address);
-  if (company.social_media) formData.append("social_media", company.social_media);
-  if (company.logo instanceof File) formData.append("logo", company.logo);
+  
+  // Garantizar valores no nulos para cadenas de texto
+  formData.append("nit", company.nit || "");
+  formData.append("name", company.name || "");
+  formData.append("address", company.address || "");
+  
+  if (company.description) {
+    formData.append("description", company.description);
+  }
+  if (company.social_media) {
+    formData.append("social_media", company.social_media);
+  }
+  if (company.phone) {
+    formData.append("phone", company.phone);
+  }
+  if (company.logo instanceof File) {
+    formData.append("logo", company.logo);
+  }
+  
   return formData;
 }
 
@@ -68,10 +81,11 @@ export async function createCompany(company) {
   }
 
   const formData = buildCompanyFormData(company);
-  const { data } = await httpClient.post("/companies", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return { status: 201, data };
+
+  // Al usar Axios con FormData, no fuerces el Header "Content-Type" a mano,
+  // deja que el navegador establezca el multipart/form-data con el boundary automático.
+  const response = await httpClient.post("/companies", formData);
+  return { status: 201, data: response.data };
 }
 
 /**
@@ -88,8 +102,6 @@ export async function updateCompany(id, company) {
   }
 
   const formData = buildCompanyFormData(company);
-  const { data } = await httpClient.put(`/companies/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return { status: 200, data };
+  const response = await httpClient.put(`/companies/${id}`, formData);
+  return { status: 200, data: response.data };
 }
