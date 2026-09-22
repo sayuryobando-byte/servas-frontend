@@ -21,23 +21,15 @@ export default function LoginPage() {
 
     setSubmitting(true);
     try {
-      // Capturamos el resultado del login desde useAuth()
-      const user = await login({ email, password });
+      // Inicia sesión guardando el token
+      await login({ email, password });
 
-      // Evaluación condicional:
-      // Verificamos si existe la empresa/compañía en el objeto retornado
-      const hasCompany = user?.companyId || user?.company_id || user?.hasCompany;
-
-      if (!hasCompany) {
-        // Si NO tiene empresa registrada, lo enviamos al registro de empresa
-        navigate("/registrar-empresa"); 
-      } else {
-        // Si YA tiene empresa, lo dejamos ir a la creación de servicios o panel
-        navigate("/registrar-servicio"); // o "/negocio" según el nombre de tu ruta
-      }
+      // Redirección directa a la página de la empresa
+      navigate("/negocio");
     } catch (err) {
-      // HU-004 · Inicio de sesión fallido
-      setError(err.friendlyMessage || "Correo o contraseña incorrectos.");
+      // HU-004 · Error al iniciar sesión
+      console.error("Error durante el proceso de login:", err);
+      setError(err?.friendlyMessage || err?.message || "Correo o contraseña incorrectos.");
     } finally {
       setSubmitting(false);
     }
