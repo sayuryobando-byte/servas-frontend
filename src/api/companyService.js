@@ -32,6 +32,23 @@ function buildCompanyFormData(company) {
 }
 
 /**
+ * HU-003 · Obtener empresa asociada al usuario autenticado
+ * GET /companies/me
+ */
+export async function getMyCompany() {
+  if (USE_MOCKS) {
+    await wait();
+    return {
+      status: 200,
+      data: { id: "company-mock-1", name: "Empresa Mock" },
+    };
+  }
+
+  const { data } = await httpClient.get("/companies/me");
+  return { status: 200, data };
+}
+
+/**
  * HU-003 · Registrar negocio
  * POST /companies (multipart/form-data)
  * requiere: nit, name, address. opcionales: description, social_media, logo
