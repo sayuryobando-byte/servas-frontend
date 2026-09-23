@@ -15,12 +15,12 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const initialForm = {
   email: "",
   password: "",
-  document_type: "",
-  document_number: "",
-  first_name: "",
-  last_name: "",
+  documentType: "",
+  documentNumber: "",
+  firstName: "",
+  lastName: "",
   phone: "",
-  birth_date: "",
+  birthDate: "",
 };
 
 export default function RegisterPage() {
@@ -40,10 +40,10 @@ export default function RegisterPage() {
     const required = [
       "email",
       "password",
-      "document_type",
-      "document_number",
-      "first_name",
-      "last_name",
+      "documentType",
+      "documentNumber",
+      "firstName",
+      "lastName",
       "phone",
     ];
 
@@ -71,6 +71,7 @@ export default function RegisterPage() {
     const errors = validate();
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
+    console.log(form);
 
     setSubmitting(true);
     try {
@@ -93,26 +94,26 @@ export default function RegisterPage() {
         {formError && <div className="alert alert--error">{formError}</div>}
 
         <div className="form-grid">
-          <Field label="Nombres" error={fieldErrors.first_name}>
+          <Field label="Nombres" error={fieldErrors.firstName}>
             <input
-              name="first_name"
-              value={form.first_name}
+              name="firstName"
+              value={form.firstName}
               onChange={handleChange}
               autoComplete="given-name"
             />
           </Field>
 
-          <Field label="Apellidos" error={fieldErrors.last_name}>
+          <Field label="Apellidos" error={fieldErrors.lastName}>
             <input
-              name="last_name"
-              value={form.last_name}
+              name="lastName"
+              value={form.lastName}
               onChange={handleChange}
               autoComplete="family-name"
             />
           </Field>
 
-          <Field label="Tipo de documento" error={fieldErrors.document_type}>
-            <select name="document_type" value={form.document_type} onChange={handleChange}>
+          <Field label="Tipo de documento" error={fieldErrors.documentType}>
+            <select name="documentType" value={form.documentType} onChange={handleChange}>
               <option value="">Selecciona...</option>
               {DOCUMENT_TYPES.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -122,10 +123,10 @@ export default function RegisterPage() {
             </select>
           </Field>
 
-          <Field label="Número de documento" error={fieldErrors.document_number}>
+          <Field label="Número de documento" error={fieldErrors.documentNumber}>
             <input
-              name="document_number"
-              value={form.document_number}
+              name="documentNumber"
+              value={form.documentNumber}
               onChange={handleChange}
             />
           </Field>
@@ -134,11 +135,11 @@ export default function RegisterPage() {
             <input name="phone" value={form.phone} onChange={handleChange} autoComplete="tel" />
           </Field>
 
-          <Field label="Fecha de nacimiento (opcional)" error={fieldErrors.birth_date}>
+          <Field label="Fecha de nacimiento (opcional)" error={fieldErrors.birthDate}>
             <input
               type="date"
-              name="birth_date"
-              value={form.birth_date}
+              name="birthDate"
+              value={form.birthDate}
               onChange={handleChange}
             />
           </Field>

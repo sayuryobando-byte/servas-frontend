@@ -35,7 +35,7 @@ export default function VerifyEmailPage() {
 
     setSubmitting(true);
     try {
-      await verifyEmail({ email, otp_code: code });
+      await verifyEmail({ email, otpCode: code });
       setSuccess("Cuenta verificada correctamente. Ya puedes iniciar sesión.");
       setTimeout(() => navigate("/login"), 1200);
     } catch (err) {

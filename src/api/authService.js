@@ -42,9 +42,9 @@ export async function registerProvider(payload) {
 /**
  * HU-002 · Verificación del correo electrónico
  * POST /auth/verify-email
- * body: { email, otp_code }
+ * body: { email, otpCode }
  */
-export async function verifyEmail({ email, otp_code }) {
+export async function verifyEmail({ email, otpCode }) {
   if (USE_MOCKS) {
     await wait();
     const record = mockState.pendingOtp[email];
@@ -57,7 +57,7 @@ export async function verifyEmail({ email, otp_code }) {
     if (record.attempts >= 3) {
       throw { friendlyMessage: "Superaste el número máximo de intentos (3)." };
     }
-    if (record.code !== otp_code) {
+    if (record.code !== otpCode) {
       record.attempts += 1;
       throw {
         friendlyMessage: `Código inválido. Intentos restantes: ${3 - record.attempts}.`,
@@ -68,7 +68,7 @@ export async function verifyEmail({ email, otp_code }) {
     return { status: 200, data: { message: "Cuenta verificada exitosamente." } };
   }
 
-  const { data } = await httpClient.post("/auth/verify-email", { email, otp_code });
+  const { data } = await httpClient.post("/auth/verify-email", { email, otpCode });
   return { status: 200, data };
 }
 
